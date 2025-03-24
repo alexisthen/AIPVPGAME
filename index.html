@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Game with Collisions</title>
+  <style>
+    /* ... (Your CSS remains the same) ... */
+  </style>
+</head>
+<body>
+  <div id="startMenu">
+    <!-- ... (Start menu HTML remains the same) ... -->
+  </div>
+  <div id="ui">
+    <!-- ... (UI HTML remains the same) ... -->
+  </div>
+  <canvas id="renderCanvas"></canvas>
+  <script src="https://cdn.jsdelivr.net/npm/@babylonjs/core@5.65.4/babylon.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babylonjs/gui@5.65.4/babylon.gui.min.js"></script>
+  <script>
+    // ... (Start Menu and UI functions remain the same) ...
+
+    function createScene() {
+      scene = new BABYLON.Scene(engine);
+      const camera = new BABYLON.ArcRotateCamera("Camera", 0, Math.PI / 2, 10, new BABYLON.Vector3(0, 5, 0), scene);
+      camera.attachControl(canvas, true);
+      const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+      const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 50, height: 50 }, scene);
+
+      player = BABYLON.MeshBuilder.CreateBox("player", { size: 1 }, scene);
+      player.position.y = 0.5;
+
+      // On collision, check if it is with the ground
+      player.checkCollisions = true; // Enable collision checking for player
+      ground.checkCollisions = true;  // Enable collision checking for ground
+
+      scene.onBeforeRenderObservable.add(() => {
+        // ... (Movement code remains the same) ...
+      });
+
+
+      return scene;
+    }
+
+    scene = createScene();
+
+    // ... (Movement and UI update functions remain the same) ...
+
+    // Shooting Placeholder (with collision detection)
+    window.addEventListener("click", () => {
+      const bullet = BABYLON.MeshBuilder.CreateSphere("bullet", { diameter: 0.2 }, scene);
+      bullet.position = player.position.clone();
+      bullet.position.y += 0.5; // Adjust bullet position above the player
+      bullet.checkCollisions = true; // Enable collision detection for bullet
+      const direction = new BABYLON.Vector3(0, 0, -1); // Shoot forward
+      bullet.physicsImpostor = new BABYLON.PhysicsImpostor(bullet, BABYLON.PhysicsImpostor.SphereImpostor, { mass: 1 }, scene);
+      bullet.applyImpulse(direction.scale(10), bullet.getAbsolutePosition()); // Apply impulse
+
+      //Detect collisions
+      scene.onBeforeRenderObservable.add(() => {
+          // Check for collision with the ground
+          const collisions = bullet.getPhysicsEngine().checkWithWorld(bullet);
+          if (collisions.length > 0) {
+              bullet.dispose();
+          }
+      });
+    });
+
+    // ... (Health and Shield damage code remains the same) ...
+
+    window.addEventListener("resize", () => engine.resize());
+  </script>
+</body>
+</html>
